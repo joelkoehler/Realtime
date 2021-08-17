@@ -1,14 +1,68 @@
+
+
+
 const express = require('express'); // First, import express
-const { readFile } = require('fs').promises;
 const app = express() // then create a node.js express APP
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
+const { v4: uuidV4 } = require('uuid');
 
-// Set up home page using HTTP GET requests
-app.get('/', async (request, response) => {
-    response.send(await readFile('./home.html', 'utf8'));
-});
+app.set('view engine', 'ejs');
+app.use(express.static('public'));
+app.get('/', (request, response) => {
+    // TODO: home page
+    // FORNOW: just redirect to a new room:
+    response.redirect(`/${uuidV4()}`);
+})
 
-// Next, tell express app to start listening to incoming requests
-app.listen(process.env.PORT || 3000, () => console.log('App available on http://localhost:3000'))
+app.get('/:room', (request, response) => {
+    response.render('room', { roomID: request.params.room })
+})
+
+io.on('connection', socket => {
+    socket.on('join-room', (roomID, userID) => {
+        //console.log(roomID, userID);
+        socket.join(roomID);
+        socket.to(roomID).emit('user-connected', userID);
+    })
+})
+
+server.listen(3000);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const express = require('express'); // First, import express
+// const app = express() // then create a node.js express APP
+// const { readFile } = require('fs').promises;
+
+
+// // Set up home page using HTTP GET requests
+// app.get('/', async (request, response) => {
+//     response.send(await readFile('./home.html', 'utf8'));
+// });
+
+// // Next, tell express app to start listening to incoming requests
+// app.listen(process.env.PORT || 3000, () => console.log('App available on http://localhost:3000'))
+
+//const { response } = require('express');
+
+
 
 
 // global (eg. global.val) is kinda like session?
